@@ -216,24 +216,59 @@ for i, pontos in clusters.items():
 
 # --- AVALIAÇÃO ---
 acertos = 0
+pontos_por_cluster = {0: 0, 1: 0, 2: 0}
+
 for instancia in databaseTeste:
     distancias = [calcularDistanciaEuclidiana(instancia[:4], c) for c in centróides]
     cluster_mais_proximo = distancias.index(min(distancias))
+    pontos_por_cluster[cluster_mais_proximo] += 1
     classe_predita = cluster_para_classe[cluster_mais_proximo]
-    print(f"Instância {instancia[:4]} -> {nomeClasse(classe_predita)}")
+    print(f"Instância {instancia[:4]} -> {nomeClasse(classe_predita)} (Cluster {cluster_mais_proximo})")
     if classe_predita == instancia[4]:
         acertos += 1
 
-print(f"Percentual de acerto: {(acertos/len(databaseTeste))*100:.2f}%")
+print(f"\nPercentual de acerto: {(acertos/len(databaseTeste))*100:.2f}%")
 
-# --- PLOT ---
+print("\nQuantidade de pontos em cada cluster:")
+for i, qtd in pontos_por_cluster.items():
+    print(f"  Cluster {i}: {qtd} pontos")
+
+import matplotlib.pyplot as plt
+
 colors = ['r', 'g', 'b']
+
+plt.figure(figsize=(12, 5))
+
+# --- Gráfico 1: Clusters formados (treinamento) ---
+plt.subplot(1, 2, 1)
 for i, pontos in clusters.items():
     x = [p[0] for p in pontos]
     y = [p[1] for p in pontos]
     plt.scatter(x, y, color=colors[i], label=f'Cluster {i+1}')
-plt.scatter([c[0] for c in centróides], [c[1] for c in centróides], color='k', marker='X', s=100, label='Centróides')
+plt.scatter([c[0] for c in centróides], [c[1] for c in centróides],
+            color='k', marker='X', s=100, label='Centróides')
 plt.xlabel('Comprimento da Sépala')
 plt.ylabel('Largura da Sépala')
+plt.title('Clusters (Treinamento)')
 plt.legend()
+
+# --- Gráfico 2: Banco de teste com predições ---
+plt.subplot(1, 2, 2)
+for instancia in databaseTeste:
+    # Calcula o cluster mais próximo
+    distancias = [calcularDistanciaEuclidiana(instancia[:4], c) for c in centróides]
+    cluster_mais_proximo = distancias.index(min(distancias))
+    classe_predita = cluster_para_classe[cluster_mais_proximo]
+
+    # Plot do ponto de teste com a cor do cluster correspondente
+    plt.scatter(instancia[0], instancia[1], color=colors[cluster_mais_proximo])
+
+plt.scatter([c[0] for c in centróides], [c[1] for c in centróides],
+            color='k', marker='X', s=100, label='Centróides')
+plt.xlabel('Comprimento da Sépala')
+plt.ylabel('Largura da Sépala')
+plt.title('Banco de Teste (Classificado pelos Clusters)')
+plt.legend()
+
+plt.tight_layout()
 plt.show()
